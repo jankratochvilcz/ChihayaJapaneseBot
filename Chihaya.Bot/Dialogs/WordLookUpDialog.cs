@@ -40,13 +40,14 @@ namespace Chihaya.Bot.Dialogs
             {
                 await this.HandleWordLookUp(this.WordToLookUp, context);
                 this.InitialLookupPerformed = true;
+
                 return;
             }
 
             var currentActivity = await result;
             var currentUtterance = currentActivity.Text.NormalizeUtterance();
 
-            var supportedPostInitialLookupIntents = new Dictionary<Func<string, bool>, Func<IDialogContext, string, Task>>
+            var supportedPostInitialLookupIntents = new Dictionary<Func<string, bool>, Func<IDialogContext, Task>>
             {
                 {
                     x => new [] { "more", "more translations", "expand" }.Any(y => y == x),
@@ -54,12 +55,21 @@ namespace Chihaya.Bot.Dialogs
                 }
             };
 
-            var selectedIntent = supportedPostInitialLookupIntents.FirstOrDefault(x => x.Key(currentUtterance));
-            await selectedIntent.Value(context, currentUtterance);
+            if (!supportedPostInitialLookupIntents.Any(x => x.Key(currentUtterance)))
+            {
+                this.InitialLookupPerformed = false;
+                context.Done(currentActivity);
+                return;
+            }
+            else
+            {
+                var selectedIntent = supportedPostInitialLookupIntents.First(x => x.Key(currentUtterance));
+                await selectedIntent.Value(context);
+            }
         }
 
-        private Task ShowOverflowLookupItems(IDialogContext context, string translationIndex)
-            => this.PostLookupResultItems(context, this.LookupResults.Results);
+        private Task ShowOverflowLookupItems(IDialogContext context)
+            => this.PostLookupResultItems(context, this.LookupResults.Results.Skip(1));
 
         private async Task HandleWordLookUp(string wordToLookUp, IDialogContext context)
         {
@@ -76,7 +86,6 @@ namespace Chihaya.Bot.Dialogs
             message.AttachmentLayout = "carousel";
 
             var cards = lookupResults
-                .Skip(1)
                 .Select(x => new HeroCard(
                     x.ReadingWithKanji,
                     x.ReadingWithKanji != x.ReadingWithKana

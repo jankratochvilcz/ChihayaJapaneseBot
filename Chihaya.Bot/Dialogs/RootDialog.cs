@@ -29,6 +29,12 @@ namespace Chihaya.Bot.Dialogs
                 .SingleOrDefault(x => x.Type == RootDialog.WordToLookUpEntityName)
                 ?.Entity;
 
+            if (wordToLookUp == null)
+            {
+                await this.UnknownIntent(context, result);
+                return;
+            }
+
             this.wordLookupDialog.WordToLookUp = wordToLookUp;
 
             await context.Forward(
@@ -36,6 +42,16 @@ namespace Chihaya.Bot.Dialogs
                 new ResumeAfter<IMessageActivity>(this.MessageReceived),
                 result,
                 CancellationToken.None);
+        }
+
+        [LuisIntent("")]
+        public async Task UnknownIntent(IDialogContext context, LuisResult result)
+        {
+            var message = context.MakeMessage();
+            message.AddKeyboardCard(string.Empty, new[] { "look up home" });
+            message.Text = "Sorry, I didn't get that. Here are some things to try.";
+
+            await context.PostAsync(message);
         }
     }
 }

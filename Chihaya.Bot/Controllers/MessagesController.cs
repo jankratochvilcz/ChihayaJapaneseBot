@@ -10,18 +10,18 @@ namespace Chihaya.Bot.Controllers
     [Route("api/[controller]")]
     public class MessagesController : Controller
     {
-        readonly RootDialog rootDialogFactory;
+        readonly RootDialog rootDialog;
 
         public MessagesController(
-            RootDialog rootDialogFactory)
+            RootDialog rootDialog)
         {
-            this.rootDialogFactory = rootDialogFactory;
+            this.rootDialog = rootDialog;
         }
 
         [HttpPost]
         public async Task Post([FromBody]Activity activity)
         {
-            await Conversation.SendAsync(activity, () => this.rootDialogFactory);
+            await Conversation.SendAsync(activity, () => this.rootDialog);
         }
     }
 }
