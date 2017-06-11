@@ -17,7 +17,7 @@ namespace Chihaya.Bot.Dialogs
 
         public string WordToLookUp { get; set; }
 
-        public bool InitialLookupPerformed { get; set; }
+        private bool InitialLookupPerformed { get; set; }
 
         private WordLookupResult LookupResults { get; set; }
 

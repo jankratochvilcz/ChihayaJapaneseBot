@@ -1,9 +1,11 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
+using System.Xml;
 
 namespace Chihaya.Bot.Services
 {
+    [Serializable]
     public class MicrosoftCognitiveTranslationService : IJapaneseTranslationService
     {
         private const string TranslateUrl = "https://api.microsofttranslator.com/V2/Http.svc/Translate";
@@ -35,11 +37,10 @@ namespace Chihaya.Bot.Services
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            var serializer = new XmlSerializer(typeof(string));
-            using (var stream = await response.Content.ReadAsStreamAsync())
-            {
-                return (string)serializer.Deserialize(stream);
-            }
+            var document = new XmlDocument();
+            document.LoadXml(await response.Content.ReadAsStringAsync());
+
+            return document.InnerText;
         }
     }
 }

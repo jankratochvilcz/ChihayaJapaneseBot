@@ -33,19 +33,32 @@ namespace Chihaya.Bot
             var containerBuilder = new ContainerBuilder();
             containerBuilder.Populate(services);
 
-            //containerBuilder
-            //    .RegisterType<MicrosoftCognitiveTranslationService>()
-            //    .Keyed<IJapaneseTranslationService>(FiberModule.Key_DoNotSerialize);
+            containerBuilder
+                .RegisterType<MicrosoftCognitiveTranslationService>()
+                .Keyed<IJapaneseTranslationService>(FiberModule.Key_DoNotSerialize)
+                .As<IJapaneseTranslationService>();
 
-            //containerBuilder
-            //    .RegisterType<MicrosoftCognitiveAuthenticationService>()
-            //    .Keyed<IMicrosoftCognitiveAuthenticationService>(FiberModule.Key_DoNotSerialize);
+            containerBuilder
+                .RegisterType<MicrosoftCognitiveAuthenticationService>()
+                .Keyed<IMicrosoftCognitiveAuthenticationService>(FiberModule.Key_DoNotSerialize)
+                .As<IMicrosoftCognitiveAuthenticationService>()
+                .SingleInstance();
 
             containerBuilder
                 .RegisterType<HttpJishoOrgWordLookupService>()
                 .Keyed<IWordLookupService>(FiberModule.Key_DoNotSerialize)
-                .AsSelf()
-                .As<IWordLookupService>()
+                .As<IWordLookupService>();
+
+            containerBuilder
+                .RegisterType<FallbackIntentRecognitionService>()
+                .Keyed<IFallbackIntentRecognitionService>(FiberModule.Key_DoNotSerialize)
+                .As<IFallbackIntentRecognitionService>()
+                .SingleInstance();
+
+            containerBuilder
+                .RegisterType<KuromojiJapaneseTokenizationService>()
+                .Keyed<IJapaneseTokenizationService>(FiberModule.Key_DoNotSerialize)
+                .As<IJapaneseTokenizationService>()
                 .SingleInstance();
 
             containerBuilder
@@ -54,6 +67,10 @@ namespace Chihaya.Bot
 
             containerBuilder
                 .RegisterType<WordLookUpDialog>()
+                .InstancePerDependency();
+
+            containerBuilder
+                .RegisterType<TranslateDialog>()
                 .InstancePerDependency();
 
             var container = containerBuilder.Build();

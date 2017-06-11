@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Chihaya.Bot.Services
 {
+    [Serializable]
     public class MicrosoftCognitiveAuthenticationService : IMicrosoftCognitiveAuthenticationService
     {
         private const string IssueTokenUrl = "https://api.cognitive.microsoft.com/sts/v1.0/issueToken";
