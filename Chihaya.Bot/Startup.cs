@@ -4,6 +4,7 @@ using Chihaya.Bot.Dialogs;
 using Chihaya.Bot.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Bot.Builder.Internals.Fibers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,11 +33,28 @@ namespace Chihaya.Bot
             var containerBuilder = new ContainerBuilder();
             containerBuilder.Populate(services);
 
-            containerBuilder.RegisterType<MicrosoftCognitiveTranslationService>().As<IJapaneseTranslationService>();
-            containerBuilder.RegisterType<MicrosoftCognitiveAuthenticationService>().As<IMicrosoftCognitiveAuthenticationService>();
-            containerBuilder.RegisterType<HttpJishoOrgWordLookupService>().As<IWordLookupService>().InstancePerLifetimeScope();
+            //containerBuilder
+            //    .RegisterType<MicrosoftCognitiveTranslationService>()
+            //    .Keyed<IJapaneseTranslationService>(FiberModule.Key_DoNotSerialize);
 
-            containerBuilder.RegisterType<RootDialog>();
+            //containerBuilder
+            //    .RegisterType<MicrosoftCognitiveAuthenticationService>()
+            //    .Keyed<IMicrosoftCognitiveAuthenticationService>(FiberModule.Key_DoNotSerialize);
+
+            containerBuilder
+                .RegisterType<HttpJishoOrgWordLookupService>()
+                .Keyed<IWordLookupService>(FiberModule.Key_DoNotSerialize)
+                .AsSelf()
+                .As<IWordLookupService>()
+                .SingleInstance();
+
+            containerBuilder
+                .RegisterType<RootDialog>()
+                .InstancePerDependency();
+
+            containerBuilder
+                .RegisterType<WordLookUpDialog>()
+                .InstancePerDependency();
 
             var container = containerBuilder.Build();
 

@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Chihaya.Bot.Services
 {
+    [Serializable]
     public class WordLookupResultItem
     {
         public string ReadingWithKanji { get; set; }

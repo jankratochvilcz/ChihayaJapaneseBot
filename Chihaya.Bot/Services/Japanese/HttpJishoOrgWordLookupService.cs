@@ -1,4 +1,5 @@
 ﻿using Chihaya.Bot.Services.Japanese.Entities.JishoOrg;
+using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace Chihaya.Bot.Services
 {
+    [Serializable]
     public class HttpJishoOrgWordLookupService : IWordLookupService
     {
         private const string SearchEndpoint = "http://jisho.org/api/v1/search/words?";

@@ -2,7 +2,7 @@
 
 namespace Chihaya.Bot.Services
 {
-    interface IWordLookupService
+    public interface IWordLookupService
     {
         Task<WordLookupResult> Lookup(string term);
     }

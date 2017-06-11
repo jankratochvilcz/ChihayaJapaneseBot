@@ -1,22 +1,41 @@
 ﻿using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Builder.Luis;
+using Microsoft.Bot.Builder.Luis.Models;
+using Microsoft.Bot.Connector;
 using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Chihaya.Bot.Dialogs
 {
     [Serializable]
-    public class RootDialog : IDialog<object>
+    [LuisModel("96aa24ab-e3f6-46df-9ef2-81445a4f2dcb", "96dcf98e02974c08b0178ef88c9c4c9a", verbose: true)]
+    public class RootDialog : LuisDialog<object>
     {
-        public Task StartAsync(IDialogContext context)
-        {
-            context.Wait(this.MessageRecieved);
+        private const string WordToLookUpEntityName = "WordToLookUp";
 
-            return Task.CompletedTask;
+        readonly WordLookUpDialog wordLookupDialog;
+
+        public RootDialog(WordLookUpDialog wordLookupDialog)
+        {
+            this.wordLookupDialog = wordLookupDialog;
         }
 
-        private async Task MessageRecieved(IDialogContext context, IAwaitable<object> result)
+        [LuisIntent("WordLookUp")]
+        public async Task LookupWordIntent(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync("hello world");
+            var wordToLookUp = result.Entities
+                .SingleOrDefault(x => x.Type == RootDialog.WordToLookUpEntityName)
+                ?.Entity;
+
+            this.wordLookupDialog.WordToLookUp = wordToLookUp;
+
+            await context.Forward(
+                this.wordLookupDialog,
+                new ResumeAfter<IMessageActivity>(this.MessageReceived),
+                result,
+                CancellationToken.None);
         }
     }
 }
