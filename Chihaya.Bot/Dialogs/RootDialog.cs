@@ -70,7 +70,7 @@ namespace Chihaya.Bot.Dialogs
 
             await context.Forward(
                 this.translateDialog,
-                new ResumeAfter<IMessageActivity>((x, _) => Task.CompletedTask),
+                new ResumeAfter<IMessageActivity>(this.MessageReceived),
                 result,
                 CancellationToken.None);
         }

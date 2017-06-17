@@ -11,7 +11,8 @@ namespace Chihaya.Bot.Dialogs
     [Serializable]
     public class WordLookUpDialog : IDialog<IMessageActivity>
     {
-        private readonly IWordLookupService wordLookupService;
+        readonly IWordLookupService wordLookupService;
+        readonly MetaMessagingService typingIndicatorService;
 
         private const int MaxOverflowResultsCount = 5;
 
@@ -22,16 +23,18 @@ namespace Chihaya.Bot.Dialogs
         private WordLookupResult LookupResults { get; set; }
 
         public WordLookUpDialog(
-            IWordLookupService wordLookupService)
+            IWordLookupService wordLookupService,
+            MetaMessagingService typingIndicatorService)
         {
+            this.typingIndicatorService = typingIndicatorService;
             this.wordLookupService = wordLookupService;
         }
 
-        public Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
-            context.Wait(this.MessageRecievedAsync);
+            await this.typingIndicatorService.SendTypingIndicator(context);
 
-            return Task.CompletedTask;
+            context.Wait(this.MessageRecievedAsync);
         }
 
         private async Task MessageRecievedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)

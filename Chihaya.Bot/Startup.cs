@@ -62,6 +62,12 @@ namespace Chihaya.Bot
                 .SingleInstance();
 
             containerBuilder
+                .RegisterType<MetaMessagingService>()
+                .Keyed<MetaMessagingService>(FiberModule.Key_DoNotSerialize)
+                .As<MetaMessagingService>()
+                .SingleInstance();
+
+            containerBuilder
                 .RegisterType<RootDialog>()
                 .InstancePerDependency();
 
@@ -71,6 +77,10 @@ namespace Chihaya.Bot
 
             containerBuilder
                 .RegisterType<TranslateDialog>()
+                .InstancePerDependency();
+
+            containerBuilder
+                .RegisterType<WelcomeDialog>()
                 .InstancePerDependency();
 
             var container = containerBuilder.Build();

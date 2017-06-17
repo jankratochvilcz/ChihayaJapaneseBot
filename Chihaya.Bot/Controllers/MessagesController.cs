@@ -21,7 +21,14 @@ namespace Chihaya.Bot.Controllers
         [HttpPost]
         public async Task Post([FromBody]Activity activity)
         {
-            await Conversation.SendAsync(activity, () => this.rootDialog);
+            if (activity.GetActivityType() == ActivityTypes.Message)
+                await Conversation.SendAsync(activity, () => this.rootDialog);
+            else
+                await this.HandleSystemMessage(activity);
+        }
+
+        private async Task HandleSystemMessage(Activity activity)
+        {
         }
     }
 }

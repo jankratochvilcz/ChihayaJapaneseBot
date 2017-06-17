@@ -13,6 +13,7 @@ namespace Chihaya.Bot.Dialogs
     {
         readonly IJapaneseTranslationService japaneseTranslationService;
         readonly IJapaneseTokenizationService japaneseTokenizationService;
+        readonly MetaMessagingService typingIndicatorService;
 
         public string PhraseToTranslate { get; set; }
 
@@ -22,17 +23,19 @@ namespace Chihaya.Bot.Dialogs
 
         public TranslateDialog(
             IJapaneseTranslationService japaneseTranslationService,
-            IJapaneseTokenizationService japaneseTokenizationService)
+            IJapaneseTokenizationService japaneseTokenizationService,
+            MetaMessagingService typingIndicatorService)
         {
+            this.typingIndicatorService = typingIndicatorService;
             this.japaneseTokenizationService = japaneseTokenizationService;
             this.japaneseTranslationService = japaneseTranslationService;
         }
 
-        public Task StartAsync(IDialogContext context)
+        public async Task StartAsync(IDialogContext context)
         {
-            context.Wait(MessageReceivedAsync);
+            await this.typingIndicatorService.SendTypingIndicator(context);
 
-            return Task.CompletedTask;
+            context.Wait(MessageReceivedAsync);
         }
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
