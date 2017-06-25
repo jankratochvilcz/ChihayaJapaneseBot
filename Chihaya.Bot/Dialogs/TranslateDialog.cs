@@ -14,6 +14,7 @@ namespace Chihaya.Bot.Dialogs
         readonly IJapaneseTranslationService japaneseTranslationService;
         readonly IJapaneseTokenizationService japaneseTokenizationService;
         readonly MetaMessagingService typingIndicatorService;
+        readonly IKanaTranscriptionService kanaTranscriptionService;
 
         public string PhraseToTranslate { get; set; }
 
@@ -24,8 +25,10 @@ namespace Chihaya.Bot.Dialogs
         public TranslateDialog(
             IJapaneseTranslationService japaneseTranslationService,
             IJapaneseTokenizationService japaneseTokenizationService,
-            MetaMessagingService typingIndicatorService)
+            MetaMessagingService typingIndicatorService,
+            IKanaTranscriptionService kanaTranscriptionService)
         {
+            this.kanaTranscriptionService = kanaTranscriptionService;
             this.typingIndicatorService = typingIndicatorService;
             this.japaneseTokenizationService = japaneseTokenizationService;
             this.japaneseTranslationService = japaneseTranslationService;
@@ -53,10 +56,6 @@ namespace Chihaya.Bot.Dialogs
 
             var supportedPostInitialLookupIntents = new Dictionary<Func<string, bool>, Func<IDialogContext, Task>>
             {
-                {
-                    x => new [] { "tokens", "tokenize", "break it down" }.Any(y => y == x),
-                    this.TokenizeTranslation
-                }
             };
 
             if (!supportedPostInitialLookupIntents.Any(x => x.Key(currentUtterance)))
@@ -72,23 +71,14 @@ namespace Chihaya.Bot.Dialogs
             }
         }
 
-        private Task TokenizeTranslation(IDialogContext context)
-        {
-            var tokensAsString = this.Tokens
-                .Aggregate(string.Empty, (acc, current) => acc + $"{current.Surface} ({current.Reading})\n\n")
-                .Trim();
-
-            context.PostAsync(tokensAsString);
-
-            return Task.CompletedTask;
-        }
-
         private async Task HandleTranslation(string phraseToTranslate, IDialogContext context)
         {
             var translationResult = await this.japaneseTranslationService.Translate(phraseToTranslate);
 
             this.Tokens = await this.japaneseTokenizationService.Tokenize(translationResult);
-            var kanaReading = this.Tokens.Aggregate(string.Empty, (acc, current) => acc + current.Reading);
+            var kanaReading = this.kanaTranscriptionService.TranscribeToPreferredKana(
+                this.Tokens.Aggregate(string.Empty, (acc, current) => acc + current.Reading),
+                context);
 
             var card = new HeroCard(translationResult, text: kanaReading);
             var message = context.MakeMessage();

@@ -16,14 +16,20 @@ namespace Chihaya.Bot.Dialogs
     {
         readonly WordLookUpDialog wordLookupDialog;
         readonly TranslateDialog translateDialog;
-        readonly IFallbackIntentRecognitionService x;
+        readonly IFallbackIntentRecognitionService fallbackIntentRecognitionService;
+        readonly SettingsDialog settingsDialog;
+        readonly IConversationSettingsService conversationSettingsService;
 
         public RootDialog(
             WordLookUpDialog wordLookupDialog,
             TranslateDialog translateDialog,
-            IFallbackIntentRecognitionService fallbackIntentRecognitionService)
+            SettingsDialog settingsDialog,
+            IFallbackIntentRecognitionService fallbackIntentRecognitionService,
+            IConversationSettingsService conversationSettingsService)
         {
-            this.x = fallbackIntentRecognitionService;
+            this.conversationSettingsService = conversationSettingsService;
+            this.settingsDialog = settingsDialog;
+            this.fallbackIntentRecognitionService = fallbackIntentRecognitionService;
             this.translateDialog = translateDialog;
             this.wordLookupDialog = wordLookupDialog;
         }
@@ -34,6 +40,9 @@ namespace Chihaya.Bot.Dialogs
             var word = result.Entities
                 .SingleOrDefault(x => x.Type == KnownEntities.WordToLookUp)
                 ?.Entity;
+
+            if (word == null)
+                word = this.fallbackIntentRecognitionService.RecognizeWordLookup(result.Query);
 
             if (word == null)
             {
@@ -58,7 +67,7 @@ namespace Chihaya.Bot.Dialogs
                 ?.Entity;
 
             if (phrase == null)
-                phrase = this.x.RecognizePhraseLookup(result.Query);
+                phrase = this.fallbackIntentRecognitionService.RecognizeTranslateLookup(result.Query);
 
             if (phrase == null)
             {
@@ -70,6 +79,18 @@ namespace Chihaya.Bot.Dialogs
 
             await context.Forward(
                 this.translateDialog,
+                new ResumeAfter<IMessageActivity>(this.MessageReceived),
+                result,
+                CancellationToken.None);
+        }
+
+        [LuisIntent(KnownIntents.Settings)]
+        public async Task SettingsIntent(IDialogContext context, LuisResult result)
+        {
+            this.settingsDialog.FillFromLuisResult(result);
+
+            await context.Forward(
+                this.settingsDialog,
                 new ResumeAfter<IMessageActivity>(this.MessageReceived),
                 result,
                 CancellationToken.None);

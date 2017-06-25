@@ -2,6 +2,7 @@
 {
     public interface IFallbackIntentRecognitionService
     {
-        string RecognizePhraseLookup(string utterance);
+        string RecognizeTranslateLookup(string utterance);
+        string RecognizeWordLookup(string utterance);
     }
 }

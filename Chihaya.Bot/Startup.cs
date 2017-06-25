@@ -68,6 +68,18 @@ namespace Chihaya.Bot
                 .SingleInstance();
 
             containerBuilder
+                .RegisterType<InMemoryKanaTranscriptionService>()
+                .Keyed<IKanaTranscriptionService>(FiberModule.Key_DoNotSerialize)
+                .As<IKanaTranscriptionService>()
+                .SingleInstance();
+
+            containerBuilder
+                .RegisterType<ConversationDataSettingsService>()
+                .Keyed<IConversationSettingsService>(FiberModule.Key_DoNotSerialize)
+                .As<IConversationSettingsService>()
+                .SingleInstance();
+
+            containerBuilder
                 .RegisterType<RootDialog>()
                 .InstancePerDependency();
 
@@ -80,7 +92,7 @@ namespace Chihaya.Bot
                 .InstancePerDependency();
 
             containerBuilder
-                .RegisterType<WelcomeDialog>()
+                .RegisterType<SettingsDialog>()
                 .InstancePerDependency();
 
             var container = containerBuilder.Build();

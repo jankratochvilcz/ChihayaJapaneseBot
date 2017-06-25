@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
-using System;
 using System.Threading.Tasks;
 
 namespace Chihaya.Bot.Controllers

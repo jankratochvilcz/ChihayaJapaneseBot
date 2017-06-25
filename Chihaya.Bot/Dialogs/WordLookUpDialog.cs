@@ -9,10 +9,11 @@ using System.Threading.Tasks;
 namespace Chihaya.Bot.Dialogs
 {
     [Serializable]
-    public class WordLookUpDialog : IDialog<IMessageActivity>
+    public class WordLookUpDialog : DialogBase
     {
         readonly IWordLookupService wordLookupService;
-        readonly MetaMessagingService typingIndicatorService;
+        readonly IKanaTranscriptionService kanaTranscriptionService;
+        readonly IConversationSettingsService conversationSettingsService;
 
         private const int MaxOverflowResultsCount = 5;
 
@@ -24,20 +25,16 @@ namespace Chihaya.Bot.Dialogs
 
         public WordLookUpDialog(
             IWordLookupService wordLookupService,
-            MetaMessagingService typingIndicatorService)
+            MetaMessagingService metaMessagingService,
+            IKanaTranscriptionService kanaTranscriptionService)
+            : base(metaMessagingService)
         {
-            this.typingIndicatorService = typingIndicatorService;
+            this.conversationSettingsService = conversationSettingsService;
+            this.kanaTranscriptionService = kanaTranscriptionService;
             this.wordLookupService = wordLookupService;
         }
 
-        public async Task StartAsync(IDialogContext context)
-        {
-            await this.typingIndicatorService.SendTypingIndicator(context);
-
-            context.Wait(this.MessageRecievedAsync);
-        }
-
-        private async Task MessageRecievedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
+        protected override async Task MessageRecievedAsync(IDialogContext context, IAwaitable<object> result)
         {
             if (!this.InitialLookupPerformed)
             {
@@ -48,12 +45,12 @@ namespace Chihaya.Bot.Dialogs
             }
 
             var currentActivity = await result;
-            var currentUtterance = currentActivity.Text.NormalizeUtterance();
+            var currentUtterance = context.Activity.AsMessageActivity().Text.NormalizeUtterance();
 
             var supportedPostInitialLookupIntents = new Dictionary<Func<string, bool>, Func<IDialogContext, Task>>
             {
                 {
-                    x => new [] { "more", "more translations", "expand" }.Any(y => y == x),
+                    x => new [] { "more", "more translations", "expand" }.Any(y => x.StartsWith(y, StringComparison.OrdinalIgnoreCase)),
                     this.ShowOverflowLookupItems
                 }
             };
@@ -89,12 +86,18 @@ namespace Chihaya.Bot.Dialogs
             message.AttachmentLayout = "carousel";
 
             var cards = lookupResults
-                .Select(x => new HeroCard(
-                    x.ReadingWithKanji,
-                    x.ReadingWithKanji != x.ReadingWithKana
-                        ? x.ReadingWithKana
-                        : null,
-                    x.EnglishDefinitionsToString()))
+                .Select(x =>
+                {
+                    var readingWithKana = this.kanaTranscriptionService.TranscribeToPreferredKana(
+                        x.ReadingWithKana,
+                       context);
+
+                    return new HeroCard(
+                        x.ReadingWithKanji,
+                        readingWithKana,
+                        x.EnglishDefinitionsToString());
+                }
+                )
                 .Select(x => x.ToAttachment());
 
             foreach (var card in cards) message.Attachments.Add(card);
