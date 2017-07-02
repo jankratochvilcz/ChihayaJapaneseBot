@@ -1,4 +1,5 @@
-﻿using Microsoft.Bot.Builder.Dialogs;
+﻿using Chihaya.Bot.Services.Japanese;
+using Microsoft.Bot.Builder.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,7 +7,9 @@ using System.Linq;
 namespace Chihaya.Bot.Services
 {
     [Serializable]
-    public class InMemoryKanaTranscriptionService : IKanaTranscriptionService
+    public class InMemoryKanaTranscriptionService
+        : IKanaTranscriptionService,
+        ILanguageDetectionService
     {
         private readonly Dictionary<string, string> hiraganaToKatakanaTranscriptions;
         private readonly IConversationSettingsService conversationSettingsService;
@@ -101,6 +104,11 @@ namespace Chihaya.Bot.Services
                 {"ょ", "ョ"},
             };
         }
+
+        public SupportedLanguage GetLanguage(string utterance)
+            => utterance.Any(x => this.hiraganaToKatakanaTranscriptions.Any(y => y.Key == x.ToString() || y.Value == x.ToString()))
+                ? SupportedLanguage.Japanese
+                : SupportedLanguage.English;
 
         public string Transcribe(string text, KanaType toKanaType)
         {

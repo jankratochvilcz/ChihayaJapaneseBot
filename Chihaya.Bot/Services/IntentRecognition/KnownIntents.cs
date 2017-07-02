@@ -6,5 +6,6 @@
         public const string Translate = "Translate";
         public const string Unknown = "";
         public const string Settings = "Settings";
+        public const string Help = "Help";
     }
 }

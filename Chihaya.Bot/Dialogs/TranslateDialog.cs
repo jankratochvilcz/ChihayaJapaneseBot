@@ -15,6 +15,7 @@ namespace Chihaya.Bot.Dialogs
         readonly IJapaneseTokenizationService japaneseTokenizationService;
         readonly MetaMessagingService typingIndicatorService;
         readonly IKanaTranscriptionService kanaTranscriptionService;
+        readonly ILanguageDetectionService languageDetectionService;
 
         public string PhraseToTranslate { get; set; }
 
@@ -25,9 +26,11 @@ namespace Chihaya.Bot.Dialogs
         public TranslateDialog(
             IJapaneseTranslationService japaneseTranslationService,
             IJapaneseTokenizationService japaneseTokenizationService,
+            ILanguageDetectionService languageDetectionService,
             MetaMessagingService typingIndicatorService,
             IKanaTranscriptionService kanaTranscriptionService)
         {
+            this.languageDetectionService = languageDetectionService;
             this.kanaTranscriptionService = kanaTranscriptionService;
             this.typingIndicatorService = typingIndicatorService;
             this.japaneseTokenizationService = japaneseTokenizationService;
@@ -71,14 +74,20 @@ namespace Chihaya.Bot.Dialogs
             }
         }
 
-        private async Task HandleTranslation(string phraseToTranslate, IDialogContext context)
+        private async Task HandleTranslation(string utterance, IDialogContext context)
         {
-            var translationResult = await this.japaneseTranslationService.Translate(phraseToTranslate);
+            var language = this.languageDetectionService.GetLanguage(utterance) == SupportedLanguage.Japanese
+                ? SupportedLanguage.English
+                : SupportedLanguage.Japanese;
+
+            var translationResult = await this.japaneseTranslationService.Translate(utterance, language);
 
             this.Tokens = await this.japaneseTokenizationService.Tokenize(translationResult);
-            var kanaReading = this.kanaTranscriptionService.TranscribeToPreferredKana(
-                this.Tokens.Aggregate(string.Empty, (acc, current) => acc + current.Reading),
-                context);
+            var kanaReading = language == SupportedLanguage.Japanese
+                ? this.kanaTranscriptionService.TranscribeToPreferredKana(
+                    this.Tokens.Aggregate(string.Empty, (acc, current) => acc + current.Reading),
+                    context)
+                : null;
 
             var card = new HeroCard(translationResult, text: kanaReading);
             var message = context.MakeMessage();

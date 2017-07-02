@@ -70,7 +70,7 @@ namespace Chihaya.Bot
             containerBuilder
                 .RegisterType<InMemoryKanaTranscriptionService>()
                 .Keyed<IKanaTranscriptionService>(FiberModule.Key_DoNotSerialize)
-                .As<IKanaTranscriptionService>()
+                .AsImplementedInterfaces()
                 .SingleInstance();
 
             containerBuilder

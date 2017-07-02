@@ -19,19 +19,19 @@ namespace Chihaya.Bot.Services
             this.cognitiveServicesAuthenticationService = cognitiveServicesAuthenticationService;
         }
 
-        public async Task<string> Translate(string text)
+        public async Task<string> Translate(string text, SupportedLanguage language)
         {
             var token = await this.cognitiveServicesAuthenticationService.GetToken(MicrosoftCognitiveTranslationService.AppKey);
 
             var client = new HttpClient();
             client.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
-            var url = $"{MicrosoftCognitiveTranslationService.TranslateUrl}?text={text}&to=ja";
+            var url = $"{MicrosoftCognitiveTranslationService.TranslateUrl}?text={text}&to={language.ToCode()}";
 
             var response = await client.GetAsync(url);
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 await this.cognitiveServicesAuthenticationService.RefreshToken(MicrosoftCognitiveTranslationService.AppKey);
-                return await this.Translate(text);
+                return await this.Translate(text, language);
             }
 
             if (!response.IsSuccessStatusCode)

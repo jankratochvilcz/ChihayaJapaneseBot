@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\ChatResponses\" />
+    <Folder Include="Assets\Conversation\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
   <ItemGroup>

@@ -96,12 +96,36 @@ namespace Chihaya.Bot.Dialogs
                 CancellationToken.None);
         }
 
+        [LuisIntent(KnownIntents.Help)]
+        public async Task HelpIntent(IDialogContext context, LuisResult result)
+        {
+            var message = context.MakeMessage();
+            message.AddKeyboardCard(string.Empty, new[] { "look up spring", "translate Have a nice evening!" });
+            message.Text = "Hi! Use me to quickly translate from and to Japanese. If hiragana is easier to read for you than katakana, you can type \"Change kana to hiragana\" any time. ";
+
+            await context.PostAsync(message);
+        }
+
         [LuisIntent(KnownIntents.Unknown)]
         public async Task UnknownIntent(IDialogContext context, LuisResult result)
         {
+            var utteranceToTranslate = this.fallbackIntentRecognitionService.RecognizeTranslateLookup(result.Query);
+            if (utteranceToTranslate != null)
+            {
+                await this.TranslateIntent(context, result);
+                return;
+            }
+
+            var utteranceToLookup = this.fallbackIntentRecognitionService.RecognizeTranslateLookup(result.Query);
+            if (utteranceToLookup != null)
+            {
+                await this.LookupWordIntent(context, result);
+                return;
+            }
+
             var message = context.MakeMessage();
-            message.AddKeyboardCard(string.Empty, new[] { "look up home" });
-            message.Text = "Sorry, I didn't get that.";
+            message.AddKeyboardCard(string.Empty, new[] { "hello" });
+            message.Text = "Sorry, try saying hello to see what you can do.";
 
             await context.PostAsync(message);
         }
