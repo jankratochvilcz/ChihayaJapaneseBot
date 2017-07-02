@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Chihaya.Bot.Dialogs
 {
     [Serializable]
-    [LuisModel("96aa24ab-e3f6-46df-9ef2-81445a4f2dcb", "96dcf98e02974c08b0178ef88c9c4c9a", verbose: true)]
+    [LuisModel("96aa24ab-e3f6-46df-9ef2-81445a4f2dcb", "96dcf98e02974c08b0178ef88c9c4c9a")]
     public class RootDialog : LuisDialog<object>
     {
         readonly WordLookUpDialog wordLookupDialog;
@@ -101,7 +101,7 @@ namespace Chihaya.Bot.Dialogs
         {
             var message = context.MakeMessage();
             message.AddKeyboardCard(string.Empty, new[] { "look up home" });
-            message.Text = "Sorry, I didn't get that. Here are some things to try.";
+            message.Text = "Sorry, I didn't get that.";
 
             await context.PostAsync(message);
         }
